@@ -13,47 +13,52 @@ public class Main {
     private static final String FILE_NAME = "src/main/resources/airports.csv";
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
-            System.out.println("Usage: java -jar -Xmx7m target/renue-test-autocomplete-input-text-1.0-SNAPSHOT.jar  <column_number>");
+            System.out.println("Usage: java -jar -Xmx7m target/renue-test-autocomplete-input-text-1.0-SNAPSHOT.jar <column_number>");
             System.exit(1);
         }
         int columnNumber = Integer.parseInt(args[0]);
         if (columnNumber < 1) {
-            System.out.println("Column number should >=1");
+            System.out.println("Column number should be >=1");
             System.exit(1);
         }
 
         System.out.print("Enter text : ");
         try (RandomAccessFile file = new RandomAccessFile(new File(FILE_NAME), "r")) {
-            HashMap<Character, ArrayList<Long>> pointers = new HashMap<>();
-            String line;
+            HashMap<Character, ArrayList<Long>> charToPositions = new HashMap<>();
+            String currentLine;
             long position = file.getFilePointer();
-            while ((line = file.readLine()) != null) {
-                String[] fields = line.replace("\"", "").split(",");
-
-                if (pointers.containsKey(fields[columnNumber - 1].charAt(0))) {
-                    ArrayList<Long> positions = pointers.get(fields[columnNumber - 1].charAt(0));
-
+            while ((currentLine = file.readLine()) != null) {
+                String[] fields = currentLine.replace("\"", "").split("\",");
+                if(fields[columnNumber - 1].charAt(0) == 'a'){
+                    System.out.println("???");
+                }
+                if(columnNumber>fields.length){
+                    System.out.println("Column number > then in file");
+                    file.close();
+                    System.exit(1);
+                }
+                if (charToPositions.containsKey(fields[columnNumber - 1].charAt(0))) {
+                    ArrayList<Long> positions = charToPositions.get(fields[columnNumber - 1].charAt(0));
                     positions.add(position);
-                    pointers.replace(fields[columnNumber - 1].charAt(0), positions);
+                    charToPositions.replace(fields[columnNumber - 1].charAt(0), positions);
                 } else {
 
                     ArrayList<Long> positions = new ArrayList<>();
                     positions.add(position);
-                    pointers.put(fields[columnNumber - 1].charAt(0), positions);
+                    charToPositions.put(fields[columnNumber - 1].charAt(0), positions);
                 }
                 position = file.getFilePointer();
             }
+
             Scanner lookScanner = new Scanner(System.in);
             String searchText;
-
-
             while (!(searchText = lookScanner.nextLine()).equals("!quit")) {
                 if (searchText.isEmpty()) {
                     break;
                 }
                 long startTime = System.currentTimeMillis();
 
-                ArrayList<Long> positions = pointers.get(searchText.charAt(0));
+                ArrayList<Long> positions = charToPositions.get(searchText.charAt(0));
                 ArrayList<LineData> matchingLines = new ArrayList<>();
                 if (positions == null) {
                     System.out.print("Symbols not found. Try again or quit using <!quit>. Enter text: ");
@@ -61,10 +66,10 @@ public class Main {
                 }
                 for (Long pos : positions) {
                     file.seek(pos);
-                    String line1 = file.readLine();
-                    String[] fields = line1.replace("\"", "").split(",");
+                    currentLine = file.readLine();
+                    String[] fields = currentLine.replace("\"", "").split(",");
                     if (fields[columnNumber - 1].startsWith(searchText)) {
-                        matchingLines.add(new LineData(fields[columnNumber - 1], line1));
+                        matchingLines.add(new LineData(fields[columnNumber - 1], currentLine));
                     }
                 }
                 Collections.sort(matchingLines);
@@ -77,9 +82,28 @@ public class Main {
             }
             file.close();
         } catch (IOException e) {
-            System.out.println("Invalid column number");
+            System.out.println("Error open file");
             System.exit(1);
         }
+    }
+
+    public static ArrayList<String> parseCsv(String line){
+        ArrayList<String> parsed = new ArrayList<>();
+        boolean inQuotes = false;
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < line.length(); i++) {
+            char currentSymbol = line.charAt(i);
+            if(currentSymbol == '"'){
+                inQuotes=!inQuotes;
+            } else if (currentSymbol == ',' && !inQuotes) {
+                parsed.add(stringBuilder.toString());
+            }else {
+                stringBuilder.append(currentSymbol);
+            }
+        }
+        return parsed;
+
+
     }
 
     private static class LineData implements Comparable<LineData> {
