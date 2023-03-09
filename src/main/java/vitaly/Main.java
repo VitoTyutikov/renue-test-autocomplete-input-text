@@ -28,24 +28,24 @@ public class Main {
             String currentLine;
             long position = file.getFilePointer();
             while ((currentLine = file.readLine()) != null) {
-                String[] fields = currentLine.replace("\"", "").split("\",");
-                if(fields[columnNumber - 1].charAt(0) == 'a'){
+                ArrayList<String> fields = parseCsv(currentLine);
+                if(fields.get(columnNumber - 1).charAt(0) == 'a'){
                     System.out.println("???");
                 }
-                if(columnNumber>fields.length){
+                if(columnNumber>fields.size()){
                     System.out.println("Column number > then in file");
                     file.close();
                     System.exit(1);
                 }
-                if (charToPositions.containsKey(fields[columnNumber - 1].charAt(0))) {
-                    ArrayList<Long> positions = charToPositions.get(fields[columnNumber - 1].charAt(0));
+                if (charToPositions.containsKey(fields.get(columnNumber - 1).charAt(0))) {
+                    ArrayList<Long> positions = charToPositions.get(fields.get(columnNumber - 1).charAt(0));
                     positions.add(position);
-                    charToPositions.replace(fields[columnNumber - 1].charAt(0), positions);
+                    charToPositions.replace(fields.get(columnNumber - 1).charAt(0), positions);
                 } else {
 
                     ArrayList<Long> positions = new ArrayList<>();
                     positions.add(position);
-                    charToPositions.put(fields[columnNumber - 1].charAt(0), positions);
+                    charToPositions.put(fields.get(columnNumber - 1).charAt(0), positions);
                 }
                 position = file.getFilePointer();
             }
@@ -67,9 +67,9 @@ public class Main {
                 for (Long pos : positions) {
                     file.seek(pos);
                     currentLine = file.readLine();
-                    String[] fields = currentLine.replace("\"", "").split(",");
-                    if (fields[columnNumber - 1].startsWith(searchText)) {
-                        matchingLines.add(new LineData(fields[columnNumber - 1], currentLine));
+                    ArrayList<String> fields = parseCsv(currentLine);
+                    if (fields.get(columnNumber - 1).startsWith(searchText)) {
+                        matchingLines.add(new LineData(fields.get(columnNumber - 1), currentLine));
                     }
                 }
                 Collections.sort(matchingLines);
