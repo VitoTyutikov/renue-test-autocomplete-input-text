@@ -35,7 +35,7 @@ public class Main {
                     System.out.println("Number of found lines = " + matchingLines.size() + " time = " + (endTime - startTime) + " ms");
                     System.out.print("Enter search text: ");
                 }
-
+                lookScanner.close();
             }
         } catch (IOException e) {
             System.out.println("Error open file");
@@ -146,16 +146,11 @@ public class Main {
 
         @Override
         public String toString() {
-            double chechNum = -1;
             try {
-                chechNum = Double.parseDouble(value);
-            } catch (Exception e) {
-                //nothing
-            }
-            if (chechNum == -1) {
-                return String.format("\"%s\"[%s]", value, line);
-            } else {
+                Double.parseDouble(value);
                 return String.format("%s[%s]", value, line);
+            } catch (Exception e) {
+                return String.format("\"%s\"[%s]", value, line);
             }
         }
     }
