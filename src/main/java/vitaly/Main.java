@@ -35,8 +35,9 @@ public class Main {
                     System.out.println("Number of found lines = " + matchingLines.size() + " time = " + (endTime - startTime) + " ms");
                     System.out.print("Enter search text: ");
                 }
-                lookScanner.close();
+
             }
+            lookScanner.close();
         } catch (IOException e) {
             System.out.println("Error open file");
             System.exit(1);
